@@ -19,12 +19,12 @@
 
 # Name of the product you are building, beware that only Netgate is legally
 # authorized to build and distribute pfSense® software
-export PRODUCT_NAME="nonSense"
+export PRODUCT_NAME="MyFirewall"
 export PRODUCT_URL="https://PRODUCT_URL/"
 
 # Define FreeBSD repository, branch and specific commit
-#export FREEBSD_REPO_BASE=https://github.com/freebsd/freebsd.git
-#export FREEBSD_BRANCH=stable/10
+#export FREEBSD_REPO_BASE=https://github.com/fPiBa-NL/FreeBSD-src.git
+#export FREEBSD_BRANCH=MyFirewall_2_4
 #export GIT_FREEBSD_COSHA1=##HASH##
 
 # Do not clean FreeBSD obj dirs
@@ -44,7 +44,8 @@ export PRODUCT_URL="https://PRODUCT_URL/"
 # pkg repo URL
 #export PKG_REPO_SERVER_DEVEL="pkg+http://beta.pfsense.org/packages"
 #export PKG_REPO_SERVER_RELEASE="pkg+http://pkg.pfsense.org/packages"
-#export PKG_REPO_SERVER_STAGING="pkg+http://release-staging.netgate.com/ce/packages"
+#export PKG_REPO_SERVER_STAGING="pkg+http://release-staging.piba-nl.nl/ce/packages"
+#export PKG_REPO_SIGNING_COMMAND="/root/sign.sh ${PKG_REPO_SIGN_KEY}"
 
 # Branch to replace pkg.conf template, defaults to $GIT_REPO_BRANCH_OR_TAG
 #export PKG_REPO_BRANCH_DEVEL="BRANCH"
