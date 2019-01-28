@@ -976,7 +976,7 @@ function ldap_test_connection($authcfg) {
 }
 
 function ldap_setup_caenv($authcfg) {
-	global $g;
+	global $g, $config;
 	require_once("certs.inc");
 
 	unset($caref);
@@ -989,26 +989,38 @@ function ldap_setup_caenv($authcfg) {
 		putenv("LDAPTLS_CACERT=/etc/ssl/cert.pem");
 	} else {
 		$caref = lookup_ca($authcfg['ldap_caref']);
-		$param = array('caref' => $authcfg['ldap_caref']);
-		$cachain = ca_chain($param);
 		if (!$caref) {
 			log_error(sprintf(gettext("LDAP: Could not lookup CA by reference for host %s."), $authcfg['ldap_caref']));
 			/* XXX: Prevent for credential leaking since we cannot setup the CA env. Better way? */
 			putenv('LDAPTLS_REQCERT=hard');
 			return;
 		}
+		// combine all CA certificates used for LDAP into 1 file, as ldap doesnt seem to support switching 
+		// to a different ca within the same running php-fpm process.
+		$ldap_ca_certs_combined = "";
+		if (is_array($config['system']['authserver'])) {
+			foreach ($config['system']['authserver'] as $authcfg) {
+				$param = array('caref' => $authcfg['ldap_caref']);
+				$cachain = ca_chain($param);
+				$ldap_ca_certs_combined .= $cachain;
+			}
+		}
+		
 		if (!is_dir("{$g['varrun_path']}/certs")) {
 			@mkdir("{$g['varrun_path']}/certs");
 		}
-		if (file_exists("{$g['varrun_path']}/certs/{$caref['refid']}.ca")) {
-			@unlink("{$g['varrun_path']}/certs/{$caref['refid']}.ca");
+		//$cafile = "{$g['varrun_path']}/certs/{$caref['refid']}.ca";
+		$cafile = "{$g['varrun_path']}/certs/ldap.ca";
+		if (file_exists($cafile)) {
+			@unlink($cafile);
 		}
-		file_put_contents("{$g['varrun_path']}/certs/{$caref['refid']}.ca", $cachain);
-		@chmod("{$g['varrun_path']}/certs/{$caref['refid']}.ca", 0600);
+		//file_put_contents($cafile, $cachain);
+		file_put_contents($cafile, $ldap_ca_certs_combined);
+		@chmod($cafile, 0600);
 		putenv('LDAPTLS_REQCERT=hard');
 		/* XXX: Probably even the hashed link should be created for this? */
 		putenv("LDAPTLS_CACERTDIR={$g['varrun_path']}/certs");
-		putenv("LDAPTLS_CACERT={$g['varrun_path']}/certs/{$caref['refid']}.ca");
+		putenv("LDAPTLS_CACERT=$cafile");
 	}
 }
 
